@@ -11,6 +11,8 @@ var helpers = require('./helpers');
 
 mongoose.connect('mongodb://localhost/santaDB');
 
+app.use(express.static(__dirname + '/../client/build'));
+
 app.post('/user', santaCtrl.userCtrl);
 
 app.post('/user/update', santaCtrl.updateUserCtrl);
