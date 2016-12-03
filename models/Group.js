@@ -3,7 +3,7 @@ var twilio = require('twilio');
 
 var GroupSchema = new mongoose.Schema({
 	name: String,
-	active: boolean,
+	active: Boolean,
 	startDate: Date,
 	endDate: Date,
 	members: Array
