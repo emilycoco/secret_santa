@@ -29,7 +29,7 @@ var errMsgs = {
 	dupErr: {
 		name: 'dupErr',
 		fn: (subject) => {
-			return 'Could not create ' + subject + ' because it already exists.';
+			return 'Could not create record for ' + subject + ' because it already exists.';
 		}
 	},
 	opsErr: {
@@ -52,6 +52,18 @@ function generateError(err, type, subject) {
 		rsp: err,
 		msg: (errMsgs[type]['fn'])(subject)
 	}
+}
+
+function createHash(number) {
+	var str = (number).toString();
+	var hash;
+
+	for (var i = 0; i < str.length; i++) {
+		var chr = str[i].charCodeAt(0);
+		hash = ((hash << 5) - hash) + chr;
+		hash |= 0; // Convert to 32bit integer
+	}
+	return hash;
 }
 
 function processSMS(msg) {
@@ -98,5 +110,6 @@ module.exports = {
 	processSMS: processSMS,
 	actions: actions,
 	errMsgs: errMsgs,
-	generateError: generateError
+	generateError: generateError,
+	createHash: createHash
 };

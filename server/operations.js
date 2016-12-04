@@ -6,16 +6,19 @@ var Group = require('../models/Group');
 var helpers = require('./helpers');
 
 
-function addUser(phone) {
+function addUser(phone, name) {
 	return new Promise((resolve, reject) => {
-		if (!phone) {
+		if (!phone || !name) {
 			reject(helpers.generateError(err, helpers.errMsgs.paramsErr.name, null));
 		} else {
-			User.findOne({phone: phone})
+			var userId = helpers.createHash(phone);
+			User.findOne({userId: userId})
 				.then(user => {
 					if (!user) {
 						var newUser = new User({
-							phone: phone
+							phone: phone,
+							name: name,
+							userId: userId
 						});
 
 						newUser.save()
@@ -29,7 +32,7 @@ function addUser(phone) {
 								reject(helpers.generateError(err, helpers.errMsgs.addErr.name, phone));
 							})
 					} else {
-						resolve(helpers.generateError(err, helpers.errMsgs.dupErr.name, phone))
+						resolve(helpers.generateError(null, helpers.errMsgs.dupErr.name, phone))
 					}
 				})
 				.catch(err => {
@@ -89,7 +92,7 @@ function addGroup(name) {
 								reject(helpers.generateError(err, helpers.errMsgs.addErr.name, name));
 							})
 					} else {
-						resolve(helpers.generateError(err, helpers.errMsgs.dupErr.name, name))
+						resolve(helpers.generateError(null, helpers.errMsgs.dupErr.name, name))
 					}
 				})
 				.catch(err => {

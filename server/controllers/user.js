@@ -6,7 +6,7 @@ var helpers = require('../helpers');
 var operations = require('../operations');
 
 function addUserCtrl(req, res) {
-	return operations.addUser(req.body.From)
+	return operations.addUser(req.body.user.phone, req.body.user.name)
 		.then(userAcct => {
 			return helpers.respond(res, userAcct.msg);
 		})
@@ -17,7 +17,7 @@ function addUserCtrl(req, res) {
 }
 
 function updateUserCtrl(req, res) {
-	return operations.updateUser(req.body.From, req.body.Update)
+	return operations.updateUser(req.body.user.userId, req.body.update)
 		.then(updatedUser => {
 			return helpers.respond(res, updatedUser.msg);
 		})

@@ -16,11 +16,11 @@ mongoose.connect('mongodb://localhost/santaDB');
 
 app.use(express.static(__dirname + '/../client/build'));
 
-app.post('/user', userCtrl.addUserCtrl);
+app.post('/user/create', userCtrl.addUserCtrl);
 
 app.post('/user/update', userCtrl.updateUserCtrl);
 
-app.post('/group', groupCtrl.addGroupCtrl);
+app.post('/group/create', groupCtrl.addGroupCtrl);
 
 app.post('/group/update', groupCtrl.updateGroupCtrl);
 
