@@ -7,8 +7,7 @@ var UserSchema = new mongoose.Schema({
 	name: String,
 	recipient: String,
 	santa: String,
-	group: String,
-	editable: Boolean
+	group: String
 });
 
 var User = mongoose.model('User', UserSchema);

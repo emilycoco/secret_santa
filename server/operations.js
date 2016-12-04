@@ -25,7 +25,7 @@ function addUser(phone, name) {
 							.then(rsp => {
 								resolve({
 									rsp: rsp,
-									msg: 'Welcome to Santahood!'
+									msg: 'Welcome to Santahood! You\'re registered, text "join groupName" to join a group, or text "help" to see a list of options.'
 								});
 							})
 							.catch(err => {
@@ -42,32 +42,29 @@ function addUser(phone, name) {
 	})
 }
 
-function updateUser(phone, hash, allow) {
+function updateUser(userId, hash) {
 	return new Promise((resolve, reject) => {
-		if (!phone || !hash) {
+		if (!userId || !hash) {
 			reject(helpers.generateError(err, helpers.errMsgs.paramsErr.name, null));
 		} else {
-			var userId = helpers.createHash(phone);
 			User.findOne({userId: userId})
 				.then(user => {
 					if (user) {
-						if (hash.key === 'name' || allow) {
+						if (!user[hash.key]) {
 							user[hash.key] = hash.value;
 							user.save()
 								.then(rsp => {
 									resolve({
 										rsp: rsp,
-										msg: 'User updated!'
+										msg: 'User ' + hash.key + ' updated!'
 									});
 								})
 								.catch(err => {
 									reject(helpers.generateError(err, helpers.errMsgs.updateErr.name, hash.key));
-								})
+								});
 						} else {
-							reject(helpers.generateError(null, helpers.errMsgs.notEditableErr.name, null));
+							reject(helpers.generateError(null, helpers.errMsgs.dupErr.name, hash.key));
 						}
-					} else if (hash.key === name) {
-						addUser(phone, hash.value);
 					} else {
 						reject(helpers.generateError(null, helpers.errMsgs.notFoundErr.name, null));
 					}
@@ -79,7 +76,9 @@ function updateUser(phone, hash, allow) {
 	});
 }
 
+
 function addGroup(name) {
+	name = name.toLowerCase().trim();
 	return new Promise((resolve, reject) => {
 		if (!name) {
 			reject(helpers.generateError(false, helpers.errMsgs.paramsErr.name, null));
@@ -115,6 +114,43 @@ function addGroup(name) {
 	})
 }
 
+function inviteGroup(name, invites, msg) {
+	return new Promise((resolve, reject) => {
+		if (!name || !invites || !msg) {
+			reject(helpers.generateError(err, helpers.errMsgs.paramsErr.name, null));
+		} else {
+			var groupId = helpers.createHash(name);
+			Group.findOne({groupId: groupId})
+				.then(group => {
+					if (group) {
+						let invitePromises = [];
+						invites.forEach(invite => {
+							invitePromises.push(helpers.sendSMS(invite, msg));
+						});
+						Promise.all(invitePromises)
+							.then(rsp => {
+								resolve({
+									rsp: rsp,
+									msg: 'Invites sent successfully!'
+								})
+							})
+							.catch(err => {
+								reject(helpers.generateError(err, helpers.errMsgs.opsErr.name, null));
+							})
+					} else {
+						reject({
+							rsp: null,
+							msg: 'This group doesn\'t exist, so we can\'t send invites yet.'
+						});
+					}
+				})
+				.catch(err => {
+					reject(helpers.generateError(err, helpers.errMsgs.opsErr.name, null));
+				});
+		}
+	});
+}
+
 function updateGroup(name, hash, allow) {
 	return new Promise((resolve, reject) => {
 		if (!name || !hash) {
@@ -124,7 +160,7 @@ function updateGroup(name, hash, allow) {
 			Group.findOne({groupId: groupId})
 				.then(group => {
 					if (hash.key === 'endDate' || allow) {
-						if (Array.isArray(group[hash.key])) {
+						if (Array.isArray(group[hash.key]) && !group[hash.key].includes(hash.value)) {
 							group[hash.key].push(hash.value);
 						} else {
 							group[hash.key] = hash.value;
@@ -153,46 +189,95 @@ function updateGroup(name, hash, allow) {
 function joinGroup(userPhone, groupName) {
 	return new Promise((resolve, reject) => {
 		if (!userPhone || !groupName) {
-			reject(helpers.generateError(false, helpers.errMsgs.paramsErr.name, null));
+			reject(null, helpers.generateError(false, helpers.errMsgs.paramsErr.name, null));
 		} else {
 			var userId = helpers.createHash(userPhone);
 			var groupId = helpers.createHash(groupName);
-			User.findOne({userId: userId})
-				.then(user => {
-					updateUser(userPhone, {
-						key: 'group',
-						value: groupId
-					}, true)
-						.then(rsp => {
-							updateGroup(groupName, {
-								key: 'members',
-								value: userId
-							}, true)
-								.then(rsp => {
-									resolve({
-										rsp: rsp,
-										msg: 'Group ' + groupName + ' joined!'
-									});
-								})
-								.catch(err => {
-									reject(err);
-								});
-						})
-						.catch(err => {
-							reject(err);
-						});
+
+			var updatedUserPromise = updateUser(userId, {
+				key: 'group',
+				value: groupId
+			});
+			var updatedGroupPromise = updateGroup(groupName, {
+				key: 'members',
+				value: userId
+			}, true);
+
+			Promise.all([updatedUserPromise, updatedGroupPromise])
+				.then(rsp => {
+					resolve({
+						rsp: rsp,
+						msg: rsp[0].rsp.name + ' added to group ' + rsp[1].rsp.name + '!'
+					})
 				})
 				.catch(err => {
-					reject(helpers.generateError(err, helpers.errMsgs.notFoundErr.name, userPhone))
+					reject(err);
 				});
 		}
 	})
 }
 
+function activateGroup(name) {
+	return new Promise((resolve, reject) => {
+		if (!name) {
+			reject(helpers.generateError(err, helpers.errMsgs.paramsErr.name, null));
+		} else {
+			var groupId = helpers.createHash(name);
+			Group.findOne({groupId: groupId})
+				.then(group => {
+					if (group) {
+						if (group.members) {
+							var userPromises = [];
+							let recipients = helpers.shuffle(group.members.slice());
+							group.members.forEach(memberId => {
+								let recipient = recipients[recipients.length - 1] === memberId ? recipients.shift() : recipients.pop();
+								userPromises.push(updateUser(memberId, {
+										key: 'recipient',
+										value: recipient
+									})
+								);
+							});
+							Promise.all(userPromises)
+								.then(rsp => {
+									group.active = true;
+									group.startDate = new Date();
+									group.save()
+										.then(rsp => {
+											resolve({
+												rsp:rsp,
+												msg: 'Group ' + group.name + ' activated!'
+											})
+										})
+										.catch(err => {
+											reject(err, helpers.generateError(err, helpers.errMsgs.updateErr.name, null));
+										});
+								})
+								.catch(err => {
+									reject(err, helpers.generateError(err, helpers.errMsgs.opsErr.name, null));
+								})
+						} else {
+							reject(err, helpers.generateError(err, helpers.errMsgs.notFoundErr.name, null));
+						}
+					} else {
+						reject(err, helpers.generateError(null, helpers.errMsgs.notFoundErr.name, null));
+					}
+				})
+				.catch(err => {
+					reject(err, helpers.generateError(err, helpers.errMsgs.notFoundErr.name, null));
+				});
+		}
+
+		function random(arr) {
+			return Math.floor(Math.random()*arr.length);
+		}
+	});
+}
+
 module.exports = {
-	updateUser: updateUser,
 	addUser: addUser,
 	addGroup: addGroup,
+	inviteGroup: inviteGroup,
 	updateGroup: updateGroup,
-	joinGroup: joinGroup
+	joinGroup: joinGroup,
+	activateGroup: activateGroup
 };

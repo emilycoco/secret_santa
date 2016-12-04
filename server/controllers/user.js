@@ -13,21 +13,8 @@ function addUserCtrl(req, res) {
 		.catch(err => {
 			return helpers.respond(res, err.msg);
 		});
-
-}
-
-function updateUserCtrl(req, res) {
-	return operations.updateUser(req.body.user.phone, req.body.update)
-		.then(updatedUser => {
-			return helpers.respond(res, updatedUser.msg);
-		})
-		.catch(err => {
-			return helpers.respond(res, err.msg);
-		});
-
 }
 
 module.exports = {
-	addUserCtrl: addUserCtrl,
-	updateUserCtrl: updateUserCtrl
+	addUserCtrl: addUserCtrl
 };

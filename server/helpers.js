@@ -1,11 +1,12 @@
-var actions = {
-	addUser: 'ADD_USER',
-	updateUserName: 'UPDATE_USER_NAME',
-	updateUserGroup: 'UPDATE_USER_GROUP',
-	addGroup: 'ADD_GROUP',
-	joinGroup: 'JOIN_GROUP',
-	activateGroup: 'ACTIVATE_GROUP'
-};
+// Twilio Credentials
+var accountSid = 'ACe5f6e550391f4e1d35603991ec989632';
+var authToken = 'f2ead11bdf29563b61cb77275064fa6d';
+var BBPromise = require("bluebird");
+//require the Twilio module and create a REST client
+var twilio = require('twilio')(accountSid, authToken);
+BBPromise.promisifyAll(twilio);
+
+// Error Messaging
 
 var errMsgs = {
 	paramsErr: {
@@ -52,6 +53,15 @@ var errMsgs = {
 	}
 };
 
+function generateError(err, type, subject) {
+	return {
+		rsp: err,
+		msg: (errMsgs[type]['fn'])(subject)
+	}
+}
+
+// Send and Receive SMS
+
 function respond(res, message) {
 	res.type('text/xml');
 	res.render('twiml', {
@@ -59,12 +69,58 @@ function respond(res, message) {
 	});
 }
 
-function generateError(err, type, subject) {
-	return {
-		rsp: err,
-		msg: (errMsgs[type]['fn'])(subject)
-	}
+function sendSMS(toNumber, msg) {
+	return new Promise((resolve, reject) => {
+		twilio.messages.create({
+			to: toNumber,
+			from: "4152003052",
+			body: msg,
+		})
+			.then(rsp => {
+				resolve({
+					rsp: rsp,
+					msg: 'Sending to ' + toNumber + ' successful.'
+				});
+			})
+			.catch(err => {
+				reject({
+					rsp: err,
+					msg: 'Sending to ' + toNumber + ' failed.'
+				});
+			})
+	});
 }
+
+var actions = {
+	addUser: 'ADD_USER',
+	joinGroup: 'JOIN_GROUP'
+};
+
+function processSMS(msg) {
+	let result = {
+		action: null,
+		data: null
+	};
+	msg = msg.toLowerCase().trim();
+
+	if (msg.indexOf('name') >= 0) {
+		result.action = actions.addUser;
+		result.data = {
+			key: 'name',
+			value: msg.split(' ').slice(1)
+		};
+	} else if (msg.indexOf('join') >= 0) {
+		result.action = actions.joinGroup;
+		result.data = {
+			key: 'group',
+			value: msg.split(' ').slice(1)
+		};
+	}
+
+	return result;
+}
+
+// Hash Ids
 
 function createHash(number) {
 	var str = (number).toString();
@@ -78,50 +134,29 @@ function createHash(number) {
 	return hash;
 }
 
-function processSMS(msg) {
-	let result = {
-		action: null,
-		data: null
-	};
-	msg = msg.toLowerCase().trim();
+// Shuffle Array
 
-	if (msg.indexOf('name') >= 0) {
-		result.action = actions.updateUserName;
-		result.data = {
-			key: 'name',
-			value: msg.split(' ')[1]
-		};
-	} else if (msg.indexOf('join group') >= 0) {
-		result.action = actions.updateUserGroup;
-		result.data = {
-			key: 'group',
-			value: msg.split(' ')[2]
-		}
-		result.key = 'group';
-		result.value = msg.split(' ')[2];
-	} else if (msg.indexOf('add group') >= 0) {
-		result.action = actions.addGroup;
-		result.data = {
-			value: msg.split(' ')[2]
-		}
-	} else if (msg.indexOf('activate group') >= 0) {
-		result.action = actions.activateGroup;
-		result.data = {
-			key: 'active',
-			value: true
-		}
-	} else {
-		result.action = actions.addUser;
+function shuffle (array) {
+	let j = 0;
+	let temp = null;
+
+	for (let i = array.length - 1; i > 0; i -= 1) {
+		j = Math.floor(Math.random() * (i + 1));
+		temp = array[i];
+		array[i] = array[j];
+		array[j] = temp
 	}
 
-	return result;
+	return array;
 }
 
 module.exports = {
 	respond: respond,
 	processSMS: processSMS,
+	sendSMS: sendSMS,
 	actions: actions,
 	errMsgs: errMsgs,
 	generateError: generateError,
-	createHash: createHash
+	createHash: createHash,
+	shuffle: shuffle
 };

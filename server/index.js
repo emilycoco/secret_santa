@@ -9,6 +9,7 @@ app.set('view engine', 'jade');
 var User = require('../models/User');
 var userCtrl = require('./controllers/user');
 var groupCtrl = require('./controllers/group');
+var smsCtrl = require('./controllers/sms');
 var helpers = require('./helpers');
 var operations = require('./operations');
 
@@ -18,9 +19,9 @@ app.use(express.static(__dirname + '/../client/build'));
 
 app.post('/user/create', userCtrl.addUserCtrl);
 
-app.post('/user/update', userCtrl.updateUserCtrl);
-
 app.post('/group/create', groupCtrl.addGroupCtrl);
+
+app.post('/group/invite', groupCtrl.inviteGroupCtrl);
 
 app.post('/group/update', groupCtrl.updateGroupCtrl);
 
@@ -28,27 +29,7 @@ app.post('/group/join', groupCtrl.joinGroupCtrl);
 
 app.post('/group/activate', groupCtrl.activateGroupCtrl);
 
-
-app.post('/sms', function(req, res) {
-	let action = helpers.processSMS(req.body.Body);
-
-	switch (action.action) {
-		case helpers.actions.updateUserName: {
-			operations.updateUser(req.body.From, action.data)
-				.then(rsp => {
-					helpers.respond(res, rsp.msg);
-				});
-			break;
-		}
-		case helpers.actions.addUser: {
-			operations.addUser(req.body.From)
-				.then(rsp => {
-					helpers.respond(res, rsp.msg);
-				});
-			break;
-		}
-	}
-});
+app.post('/sms', smsCtrl.smsCtrl);
 
 app.listen(8005, function () {
 	console.log('Secret User Api listening on port %d!', this.address().port);

@@ -6,7 +6,7 @@ var helpers = require('../helpers');
 var operations = require('../operations');
 
 function addGroupCtrl(req, res) {
-	return operations.addGroup(req.body.group)
+	return operations.addGroup(req.body.group.name)
 		.then(groupAcct => {
 			return helpers.respond(res, groupAcct.msg);
 		})
@@ -15,8 +15,19 @@ function addGroupCtrl(req, res) {
 		});
 }
 
+
+function inviteGroupCtrl(req, res) {
+	return operations.inviteGroup(req.body.group.name, req.body.invites, req.body.group.inviteMsg)
+		.then(groupMembers => {
+			return helpers.respond(res, groupMembers.msg);
+		})
+		.catch(err => {
+			return helpers.respond(res, err.msg);
+		});
+}
+
 function updateGroupCtrl(req, res) {
-	return operations.updateGroup(req.body.group, req.body.update)
+	return operations.updateGroup(req.body.group.name, req.body.update)
 		.then(updatedGroup => {
 			return helpers.respond(res, updatedGroup.msg);
 		})
@@ -35,12 +46,19 @@ function joinGroupCtrl(req, res) {
 		});
 }
 
-function activateGroupCtrl() {
-
+function activateGroupCtrl(req, res) {
+	return operations.activateGroup(req.body.group.name)
+		.then(activated => {
+			return helpers.respond(res, activated.msg);
+		})
+		.catch(err => {
+			return helpers.respond(res, err.msg);
+		});
 }
 
 module.exports = {
 	addGroupCtrl: addGroupCtrl,
+	inviteGroupCtrl: inviteGroupCtrl,
 	updateGroupCtrl: updateGroupCtrl,
 	activateGroupCtrl: activateGroupCtrl,
 	joinGroupCtrl: joinGroupCtrl
