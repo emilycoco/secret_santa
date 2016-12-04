@@ -42,24 +42,35 @@ function addUser(phone, name) {
 	})
 }
 
-function updateUser(phone, hash) {
+function updateUser(phone, hash, allow) {
 	return new Promise((resolve, reject) => {
 		if (!phone || !hash) {
 			reject(helpers.generateError(err, helpers.errMsgs.paramsErr.name, null));
 		} else {
-			User.findOne({phone: phone})
+			var userId = helpers.createHash(phone);
+			User.findOne({userId: userId})
 				.then(user => {
-					user[hash.key] = hash.value;
-					user.save()
-						.then(rsp => {
-							resolve({
-								rsp: rsp,
-								msg: 'User updated!'
-							});
-						})
-						.catch(err => {
-							reject(helpers.generateError(err, helpers.errMsgs.updateErr.name, hash.key));
-						})
+					if (user) {
+						if (hash.key === 'name' || allow) {
+							user[hash.key] = hash.value;
+							user.save()
+								.then(rsp => {
+									resolve({
+										rsp: rsp,
+										msg: 'User updated!'
+									});
+								})
+								.catch(err => {
+									reject(helpers.generateError(err, helpers.errMsgs.updateErr.name, hash.key));
+								})
+						} else {
+							reject(helpers.generateError(null, helpers.errMsgs.notEditableErr.name, null));
+						}
+					} else if (hash.key === name) {
+						addUser(phone, hash.value);
+					} else {
+						reject(helpers.generateError(null, helpers.errMsgs.notFoundErr.name, null));
+					}
 				})
 				.catch(err => {
 					reject(helpers.generateError(err, helpers.errMsgs.opsErr.name, null));
@@ -73,12 +84,14 @@ function addGroup(name) {
 		if (!name) {
 			reject(helpers.generateError(false, helpers.errMsgs.paramsErr.name, null));
 		} else {
-			Group.findOne({name: name})
+			var groupId = helpers.createHash(name);
+			Group.findOne({groupId: groupId})
 				.then(group => {
 					if (!group) {
 						var newGroup = new Group({
 							name: name,
-							active: false
+							active: false,
+							groupId: groupId
 						});
 
 						newGroup.save()
@@ -92,7 +105,7 @@ function addGroup(name) {
 								reject(helpers.generateError(err, helpers.errMsgs.addErr.name, name));
 							})
 					} else {
-						resolve(helpers.generateError(null, helpers.errMsgs.dupErr.name, name))
+						reject(helpers.generateError(null, helpers.errMsgs.dupErr.name, name))
 					}
 				})
 				.catch(err => {
@@ -102,24 +115,33 @@ function addGroup(name) {
 	})
 }
 
-function updateGroup(name, hash) {
+function updateGroup(name, hash, allow) {
 	return new Promise((resolve, reject) => {
 		if (!name || !hash) {
 			reject(helpers.generateError(err, helpers.errMsgs.paramsErr.name, null));
 		} else {
-			Group.findOne({name: name})
+			var groupId = helpers.createHash(name);
+			Group.findOne({groupId: groupId})
 				.then(group => {
-					group[hash.key] = hash.value;
-					group.save()
-						.then(rsp => {
-							resolve({
-								rsp: rsp,
-								msg: 'Group updated!'
-							});
-						})
-						.catch(err => {
-							reject(helpers.generateError(err, helpers.errMsgs.updateErr.name, hash.key));
-						})
+					if (hash.key === 'endDate' || allow) {
+						if (Array.isArray(group[hash.key])) {
+							group[hash.key].push(hash.value);
+						} else {
+							group[hash.key] = hash.value;
+						}
+						group.save()
+							.then(rsp => {
+								resolve({
+									rsp: rsp,
+									msg: 'Group updated!'
+								});
+							})
+							.catch(err => {
+								reject(helpers.generateError(err, helpers.errMsgs.updateErr.name, hash.key));
+							})
+					} else {
+						reject(helpers.generateError(null, helpers.errMsgs.notEditableErr.name, null));
+					}
 				})
 				.catch(err => {
 					reject(helpers.generateError(err, helpers.errMsgs.opsErr.name, null));
@@ -128,9 +150,49 @@ function updateGroup(name, hash) {
 	});
 }
 
+function joinGroup(userPhone, groupName) {
+	return new Promise((resolve, reject) => {
+		if (!userPhone || !groupName) {
+			reject(helpers.generateError(false, helpers.errMsgs.paramsErr.name, null));
+		} else {
+			var userId = helpers.createHash(userPhone);
+			var groupId = helpers.createHash(groupName);
+			User.findOne({userId: userId})
+				.then(user => {
+					updateUser(userPhone, {
+						key: 'group',
+						value: groupId
+					}, true)
+						.then(rsp => {
+							updateGroup(groupName, {
+								key: 'members',
+								value: userId
+							}, true)
+								.then(rsp => {
+									resolve({
+										rsp: rsp,
+										msg: 'Group ' + groupName + ' joined!'
+									});
+								})
+								.catch(err => {
+									reject(err);
+								});
+						})
+						.catch(err => {
+							reject(err);
+						});
+				})
+				.catch(err => {
+					reject(helpers.generateError(err, helpers.errMsgs.notFoundErr.name, userPhone))
+				});
+		}
+	})
+}
+
 module.exports = {
 	updateUser: updateUser,
 	addUser: addUser,
 	addGroup: addGroup,
-	updateGroup: updateGroup
+	updateGroup: updateGroup,
+	joinGroup: joinGroup
 };

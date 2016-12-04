@@ -17,7 +17,7 @@ function addUserCtrl(req, res) {
 }
 
 function updateUserCtrl(req, res) {
-	return operations.updateUser(req.body.user.userId, req.body.update)
+	return operations.updateUser(req.body.user.phone, req.body.update)
 		.then(updatedUser => {
 			return helpers.respond(res, updatedUser.msg);
 		})

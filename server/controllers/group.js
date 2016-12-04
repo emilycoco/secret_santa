@@ -6,7 +6,7 @@ var helpers = require('../helpers');
 var operations = require('../operations');
 
 function addGroupCtrl(req, res) {
-	return operations.addGroup(req.body.Name)
+	return operations.addGroup(req.body.group)
 		.then(groupAcct => {
 			return helpers.respond(res, groupAcct.msg);
 		})
@@ -16,7 +16,7 @@ function addGroupCtrl(req, res) {
 }
 
 function updateGroupCtrl(req, res) {
-	return operations.updateGroup(req.body.Name, req.body.Update)
+	return operations.updateGroup(req.body.group, req.body.update)
 		.then(updatedGroup => {
 			return helpers.respond(res, updatedGroup.msg);
 		})
@@ -25,8 +25,14 @@ function updateGroupCtrl(req, res) {
 		});
 }
 
-function joinGroupCtrl() {
-
+function joinGroupCtrl(req, res) {
+	return operations.joinGroup(req.body.user.phone, req.body.group.name)
+		.then(joinedGroup => {
+			return helpers.respond(res, joinedGroup.msg);
+		})
+		.catch(err => {
+			return helpers.respond(res, err.msg);
+		});
 }
 
 function activateGroupCtrl() {

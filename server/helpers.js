@@ -37,6 +37,18 @@ var errMsgs = {
 		fn: () => {
 			return 'Uh Oh, something went wrong. Please try again later.';
 		}
+	},
+	notFoundErr: {
+		name: 'notFoundErr',
+		fn: () => {
+			return 'We couldn\'t find a record to update.';
+		}
+	},
+	notEditableErr: {
+		name: 'notEditableErr',
+		fn: () => {
+			return 'This property cannot be edited.';
+		}
 	}
 };
 
