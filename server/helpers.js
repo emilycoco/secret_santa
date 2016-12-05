@@ -63,11 +63,15 @@ function generateError(err, type, subject) {
 
 // Send and Receive SMS
 
-function respond(res, message) {
-	res.type('text/xml');
-	res.render('twiml', {
-		message: message
-	});
+function respond(res, message, sms) {
+	if (sms) {
+		res.type('text/xml');
+		res.render('twiml', {
+			message: message.msg
+		});
+	} else {
+		res.status(200).send(message);
+	};
 }
 
 function sendSMS(toNumber, msg) {

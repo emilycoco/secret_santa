@@ -13,40 +13,40 @@ function smsCtrl(req, res) {
             case helpers.actions.addUser: {
                 operations.addUser(phone, action.data.value)
                     .then(rsp => {
-                        helpers.respond(res, rsp.msg);
+                        helpers.respond(res, rsp, true);
                     })
                     .catch(err => {
-                        helpers.respond(res, err.msg);
+                        helpers.respond(res, err, true);
                     });
                 break;
             }
             case helpers.actions.joinGroup: {
                 operations.joinGroup(phone, action.data.value)
                     .then(rsp => {
-                        helpers.respond(res, rsp.msg);
+                        helpers.respond(res, rsp, true);
                     })
                     .catch(err => {
-                        helpers.respond(res, err.msg);
+                        helpers.respond(res, err, true);
                     });
                 break;
             }
             case helpers.actions.sendSanta: {
                 operations.sendMsg(phone, action.data)
                     .then(rsp => {
-                        helpers.respond(res, rsp.msg);
+                        helpers.respond(res, rsp, true);
                     })
                     .catch(err => {
-                        helpers.respond(res, err.msg);
+                        helpers.respond(res, err, true);
                     });
                 break;
             }
             case helpers.actions.sendRecipient: {
                 operations.sendMsg(phone, action.data)
                     .then(rsp => {
-                        helpers.respond(res, rsp.msg);
+                        helpers.respond(res, rsp, true);
                     })
                     .catch(err => {
-                        helpers.respond(res, err.msg);
+                        helpers.respond(res, err, true);
                     });
                 break;
             }

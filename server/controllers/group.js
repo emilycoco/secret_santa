@@ -8,10 +8,10 @@ var operations = require('../operations');
 function addGroupCtrl(req, res) {
 	return operations.addGroup(req.body.group.name)
 		.then(groupAcct => {
-			return helpers.respond(res, groupAcct.msg);
+			return helpers.respond(res, groupAcct);
 		})
 		.catch(err => {
-			return helpers.respond(res, err.msg);
+			return helpers.respond(res, err);
 		});
 }
 
@@ -19,40 +19,40 @@ function addGroupCtrl(req, res) {
 function inviteGroupCtrl(req, res) {
 	return operations.inviteGroup(req.body.group.name, req.body.invites, req.body.group.inviteMsg)
 		.then(groupMembers => {
-			return helpers.respond(res, groupMembers.msg);
+			return helpers.respond(res, groupMembers);
 		})
 		.catch(err => {
-			return helpers.respond(res, err.msg);
+			return helpers.respond(res, err);
 		});
 }
 
 function updateGroupCtrl(req, res) {
 	return operations.updateGroup(req.body.group.name, req.body.update)
 		.then(updatedGroup => {
-			return helpers.respond(res, updatedGroup.msg);
+			return helpers.respond(res, updatedGroup);
 		})
 		.catch(err => {
-			return helpers.respond(res, err.msg);
+			return helpers.respond(res, err);
 		});
 }
 
 function joinGroupCtrl(req, res) {
 	return operations.joinGroup(req.body.user.phone, req.body.group.name)
 		.then(joinedGroup => {
-			return helpers.respond(res, joinedGroup.msg);
+			return helpers.respond(res, joinedGroup);
 		})
 		.catch(err => {
-			return helpers.respond(res, err.msg);
+			return helpers.respond(res, err);
 		});
 }
 
 function activateGroupCtrl(req, res) {
 	return operations.activateGroup(req.body.group.name)
 		.then(activated => {
-			return helpers.respond(res, activated.msg);
+			return helpers.respond(res, activated);
 		})
 		.catch(err => {
-			return helpers.respond(res, err.msg);
+			return helpers.respond(res, err);
 		});
 }
 

@@ -8,10 +8,10 @@ var operations = require('../operations');
 function addUserCtrl(req, res) {
 	return operations.addUser(req.body.user.phone, req.body.user.name)
 		.then(userAcct => {
-			return helpers.respond(res, userAcct.msg);
+			return helpers.respond(res, userAcct);
 		})
 		.catch(err => {
-			return helpers.respond(res, err.msg);
+			return helpers.respond(res, err);
 		});
 }
 
