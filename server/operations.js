@@ -7,6 +7,7 @@ var helpers = require('./helpers');
 
 
 function addUser(phone, name) {
+	name = name.toLowerCase().trim();
 	return new Promise((resolve, reject) => {
 		if (!phone || !name) {
 			reject(helpers.generateError(err, helpers.errMsgs.paramsErr.name, null));
@@ -115,6 +116,7 @@ function addGroup(name) {
 }
 
 function inviteGroup(name, invites, msg) {
+	name = name.toLowerCase().trim();
 	return new Promise((resolve, reject) => {
 		if (!name || !invites || !msg) {
 			reject(helpers.generateError(err, helpers.errMsgs.paramsErr.name, null));
@@ -152,6 +154,7 @@ function inviteGroup(name, invites, msg) {
 }
 
 function updateGroup(name, hash, allow) {
+	name = name.toLowerCase().trim();
 	return new Promise((resolve, reject) => {
 		if (!name || !hash) {
 			reject(helpers.generateError(err, helpers.errMsgs.paramsErr.name, null));
@@ -186,7 +189,8 @@ function updateGroup(name, hash, allow) {
 	});
 }
 
-function joinGroup(userPhone, groupName) {
+function joinGroup(userPhone, group) {
+	let groupName = group.toLowerCase().trim();
 	return new Promise((resolve, reject) => {
 		if (!userPhone || !groupName) {
 			reject(null, helpers.generateError(false, helpers.errMsgs.paramsErr.name, null));
@@ -211,13 +215,17 @@ function joinGroup(userPhone, groupName) {
 					})
 				})
 				.catch(err => {
-					reject(err);
+					reject({
+						rsp: err,
+						msg: 'Could not join group ' + group + ', only one group can be joined at a time.'
+					});
 				});
 		}
 	})
 }
 
 function activateGroup(name) {
+	name = name.toLowerCase().trim();
 	return new Promise((resolve, reject) => {
 		if (!name) {
 			reject(helpers.generateError(err, helpers.errMsgs.paramsErr.name, null));
@@ -248,10 +256,32 @@ function activateGroup(name) {
 									group.startDate = new Date();
 									group.save()
 										.then(rsp => {
-											resolve({
-												rsp:rsp,
-												msg: 'Group ' + group.name + ' activated!'
-											})
+
+											let userMsgPromises = [];
+											group.members.forEach(memberId => {
+												userMsgPromises.push(User.findOne({userId: memberId})
+													.then(user => {
+														User.findOne({userId: user.recipient})
+															.then(recipientUser => {
+																helpers.sendSMS(user.phone,
+																'Your group is now active! Your recipient is ' +
+																recipientUser.name +
+																'. To communicate with your recipient or your santa text "send santa" or "send recipient" followed by a message.')
+															});
+													})
+												);
+											});
+
+											Promise.all(userMsgPromises)
+												.then(rsp => {
+													resolve({
+														rsp:rsp,
+														msg: 'Group ' + group.name + ' activated!'
+													})
+												})
+												.catch(err => {
+													reject(err, helpers.generateError(err, helpers.errMsgs.updateErr.name, null));
+												});
 										})
 										.catch(err => {
 											reject(err, helpers.generateError(err, helpers.errMsgs.updateErr.name, null));
