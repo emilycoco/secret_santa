@@ -115,7 +115,7 @@ function processSMS(msg) {
 		action: null,
 		data: null
 	};
-	msg = msg.toLowerCase().trim();
+	msg = msg ? msg.toLowerCase().trim() : '';
 
 	if (msg.indexOf('name') >= 0) {
 		result.action = actions.addUser;

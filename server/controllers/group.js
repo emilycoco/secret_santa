@@ -1,7 +1,6 @@
 var mongoose = require('mongoose');
 var Promise = require('bluebird');
 mongoose.Promise = Promise;
-var Santa = require('../../models/User');
 var helpers = require('../helpers');
 var operations = require('../operations');
 

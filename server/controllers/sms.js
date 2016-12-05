@@ -7,7 +7,7 @@ function smsCtrl(req, res) {
 
     var phoneCheck = (phone && typeof phone === 'string' && phone.length === 11);
     var bodyCheck = (action.action && action.data && action.data.key && action.data.value);
-console.log(action, phone)
+
     if (phoneCheck && bodyCheck) {
         switch (action.action) {
             case helpers.actions.addUser: {
