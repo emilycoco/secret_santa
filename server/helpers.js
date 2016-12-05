@@ -100,8 +100,15 @@ var actions = {
 	addUser: 'ADD_USER',
 	joinGroup: 'JOIN_GROUP',
 	sendSanta: 'SEND_SANTA',
-	sendRecipient: 'SEND_RECIPIENT'
+	sendRecipient: 'SEND_RECIPIENT',
+	help: 'HELP'
 };
+
+var helpText = 'Available commands:' +
+	'\nName yourName: register with your name' +
+	'\nJoin groupName: join a group' +
+	'\nSend santa: send a msg to your secret santa' +
+	'\nSend recipient: send a msg to your recipient';
 
 function processSMS(msg) {
 	let result = {
@@ -133,6 +140,12 @@ function processSMS(msg) {
 		result.data = {
 			key: 'recipient',
 			value: msg.split(' ').slice(2).join(' ')
+		};
+	} else {
+		result.action = actions.help;
+		result.data = {
+			key: 'help',
+			value: 'help'
 		};
 	}
 
@@ -177,5 +190,6 @@ module.exports = {
 	errMsgs: errMsgs,
 	generateError: generateError,
 	createHash: createHash,
-	shuffle: shuffle
+	shuffle: shuffle,
+	helpText: helpText
 };

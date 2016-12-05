@@ -25,6 +25,7 @@ tags
 
 # NPM packages folder.
 node_modules/
+npm-debug.log
 
 # DotEnv
 .env

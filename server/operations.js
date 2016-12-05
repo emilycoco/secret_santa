@@ -324,7 +324,7 @@ function sendMsg(phone, hash) {
 						} else {
 							reject({
 								rsp: null,
-								msg: 'Lost in communication, couldn\'t understand who to send this message to.'
+								msg: 'Couldn\'t find this recipient, is your group active yet?'
 							})
 						}
 					} else {
