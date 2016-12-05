@@ -3,15 +3,15 @@ var express = require('express');
 var app = express();
 var mongoose = require('mongoose');
 var bodyParser = require('body-parser');
+
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 app.set('view engine', 'jade');
-var User = require('../models/User');
+
 var userCtrl = require('./controllers/user');
 var groupCtrl = require('./controllers/group');
 var smsCtrl = require('./controllers/sms');
 var helpers = require('./helpers');
-var operations = require('./operations');
 
 mongoose.connect('mongodb://localhost/santaDB');
 

@@ -230,10 +230,15 @@ function activateGroup(name) {
 							var userPromises = [];
 							let recipients = helpers.shuffle(group.members.slice());
 							group.members.forEach(memberId => {
-								let recipient = recipients[recipients.length - 1] === memberId ? recipients.shift() : recipients.pop();
+								let recipientId = recipients[recipients.length - 1] === memberId ? recipients.shift() : recipients.pop();
 								userPromises.push(updateUser(memberId, {
 										key: 'recipient',
-										value: recipient
+										value: recipientId
+									})
+								);
+								userPromises.push(updateUser(recipientId, {
+										key: 'santa',
+										value: memberId
 									})
 								);
 							});
@@ -273,11 +278,72 @@ function activateGroup(name) {
 	});
 }
 
+function sendMsg(phone, hash) {
+	return new Promise((resolve, reject) => {
+		if (!phone || !hash) {
+			reject(helpers.generateError(err, helpers.errMsgs.paramsErr.name, null));
+		} else {
+			var userId = helpers.createHash(phone);
+			User.findOne({userId: userId})
+				.then(user => {
+					if (user) {
+						let send = {
+							to: null,
+							msg: null
+						};
+
+						if (hash.key === 'santa') {
+							send.to = user.santa;
+							send.msg = 'Message from your recipient: ' + hash.value;
+						} else if (hash.key === 'recipient') {
+							send.to = user.recipient;
+							send.msg = 'Message from santa: ' + hash.value;
+						}
+
+						if (send.to) {
+							User.findOne({userId: send.to})
+								.then(user => {
+									if (user) {
+										helpers.sendSMS(user.phone, send.msg)
+											.then(rsp => {
+												resolve({
+													rsp: rsp,
+													msg: 'Message sent!'
+												})
+											})
+									} else {
+										reject({
+											rsp: null,
+											msg: 'Lost in communication, couldn\'t understand who to send this message to.'
+										})
+									}
+								})
+								.catch(err => {
+									reject(null, helpers.generateError(err, helpers.errMsgs.notFoundErr.name, null));
+								});
+						} else {
+							reject({
+								rsp: null,
+								msg: 'Lost in communication, couldn\'t understand who to send this message to.'
+							})
+						}
+					} else {
+						resolve(null, helpers.generateError(null, helpers.errMsgs.notFoundErr.name, phone))
+					}
+				})
+				.catch(err => {
+					reject(helpers.generateError(err, helpers.errMsgs.opsErr.name, null));
+				});
+		}
+	})
+}
+
 module.exports = {
 	addUser: addUser,
 	addGroup: addGroup,
 	inviteGroup: inviteGroup,
 	updateGroup: updateGroup,
 	joinGroup: joinGroup,
-	activateGroup: activateGroup
+	activateGroup: activateGroup,
+	sendMsg: sendMsg
 };

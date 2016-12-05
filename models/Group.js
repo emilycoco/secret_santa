@@ -1,5 +1,4 @@
 var mongoose = require('mongoose');
-var twilio = require('twilio');
 
 var GroupSchema = new mongoose.Schema({
 	groupId: String,

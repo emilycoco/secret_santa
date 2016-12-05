@@ -1,5 +1,4 @@
 var mongoose = require('mongoose');
-var twilio = require('twilio');
 
 var UserSchema = new mongoose.Schema({
 	userId: String,

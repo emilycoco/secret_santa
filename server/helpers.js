@@ -2,6 +2,7 @@
 var accountSid = 'ACe5f6e550391f4e1d35603991ec989632';
 var authToken = 'f2ead11bdf29563b61cb77275064fa6d';
 var BBPromise = require("bluebird");
+
 //require the Twilio module and create a REST client
 var twilio = require('twilio')(accountSid, authToken);
 BBPromise.promisifyAll(twilio);
@@ -93,7 +94,9 @@ function sendSMS(toNumber, msg) {
 
 var actions = {
 	addUser: 'ADD_USER',
-	joinGroup: 'JOIN_GROUP'
+	joinGroup: 'JOIN_GROUP',
+	sendSanta: 'SEND_SANTA',
+	sendRecipient: 'SEND_RECIPIENT'
 };
 
 function processSMS(msg) {
@@ -107,13 +110,25 @@ function processSMS(msg) {
 		result.action = actions.addUser;
 		result.data = {
 			key: 'name',
-			value: msg.split(' ').slice(1)
+			value: msg.split(' ').slice(1).join(' ')
 		};
 	} else if (msg.indexOf('join') >= 0) {
 		result.action = actions.joinGroup;
 		result.data = {
 			key: 'group',
-			value: msg.split(' ').slice(1)
+			value: msg.split(' ').slice(1).join(' ')
+		};
+	} else if (msg.indexOf('send santa') >= 0) {
+		result.action = actions.sendSanta;
+		result.data = {
+			key: 'santa',
+			value: msg.split(' ').slice(2).join(' ')
+		};
+	} else if (msg.indexOf('send recipient') >= 0) {
+		result.action = actions.sendRecipient;
+		result.data = {
+			key: 'recipient',
+			value: msg.split(' ').slice(2).join(' ')
 		};
 	}
 
